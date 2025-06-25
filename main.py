@@ -28,6 +28,12 @@ async def start_handler(message: types.Message, state: FSMContext):
     await state.set_state(Form.name)
 
 
+@dp.message(F.data == 'confirm_no')
+async def start_handler(message: types.Message, state: FSMContext):
+    await message.answer("Введите Ваше имя.")
+    await state.set_state(Form.name)
+
+
 @dp.message(Form.name)
 async def process_name(message: types.Message, state: FSMContext):
     await state.update_data(name=message.text)
@@ -69,11 +75,8 @@ async def process_age(message: types.Message, state: FSMContext):
         text="Работа с проживанием (вахта)",
         callback_data="work_type_1"))
     builder.add(types.InlineKeyboardButton(
-        text="Постоянная",
-        callback_data="work_type_2"))
-    builder.add(types.InlineKeyboardButton(
         text="Подработка",
-        callback_data="work_type_3"))
+        callback_data="work_type_2"))
     builder.adjust(1)
     await message.answer("Тип работы:", reply_markup=builder.as_markup())
     await state.set_state(Form.work_type)
@@ -83,22 +86,13 @@ async def process_age(message: types.Message, state: FSMContext):
 async def process_work_type(callback: types.CallbackQuery, state: FSMContext):
     work_type = {
         'work_type_1': 'Работа с проживанием (вахта)',
-        'work_type_2': 'Постоянная',
-        'work_type_3': 'Подработка'
+        'work_type_2': 'Подработка'
     }[callback.data]
 
     await state.update_data(work_type=work_type)
 
-    contact_button = KeyboardButton(text="Отправить мой номер", request_contact=True)
-    markup = ReplyKeyboardMarkup(
-        keyboard=[[contact_button]],
-        resize_keyboard=True,
-        one_time_keyboard=True
-    )
-
     await callback.message.answer(
-        "Введите ваш телефон.",
-        reply_markup=markup
+        "Введите ваш телефон."
     )
     await state.set_state(Form.phone)
     await callback.answer()
@@ -111,12 +105,7 @@ async def process_phone(message: types.Message, state: FSMContext):
 
     data = await state.get_data()
 
-    text = f"Проверьте данные:\n\n" \
-           f"Имя: {data['name']}\n" \
-           f"Гражданство: {data['citizenship'].upper()}\n" \
-           f"Возраст: {data['age']}\n" \
-           f"Тип работы: {data['work_type']}\n" \
-           f"Телефон: {phone}"
+    text = f"Проверьте данные:\n\nИмя: {data['name']}\nГражданство: {data['citizenship'].upper()}\nВозраст: {data['age']}\nТип работы: {data['work_type']}\nТелефон: {phone}"
 
     builder = InlineKeyboardBuilder()
     builder.add(types.InlineKeyboardButton(
